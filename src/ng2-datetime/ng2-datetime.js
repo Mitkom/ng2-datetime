@@ -9,19 +9,19 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var core_1 = require('@angular/core');
-var forms_1 = require('@angular/forms');
+var common_1 = require('@angular/common');
+//import MaskedInput from 'angular2-text-mask';
 var NKDatetime = (function () {
     function NKDatetime(ngControl) {
         this.dateChange = new core_1.EventEmitter();
         this.timepickerOptions = {};
+        //    @Input('timeTextMask')
+        //    timeTextMaskOtpions: any = {};
         this.datepickerOptions = {};
-        this.hasClearButton = false;
         this.idDatePicker = uniqueId('q-datepicker_');
         this.idTimePicker = uniqueId('q-timepicker_');
-        this.onChange = function (_) {
-        };
-        this.onTouched = function () {
-        };
+        this.onChange = function (_) { };
+        this.onTouched = function () { };
         ngControl.valueAccessor = this; // override valueAccessor
     }
     NKDatetime.prototype.ngAfterViewInit = function () {
@@ -29,34 +29,6 @@ var NKDatetime = (function () {
     };
     NKDatetime.prototype.ngOnDestroy = function () {
         if (this.datepicker) {
-            this.datepicker.datepicker('destroy');
-        }
-        if (this.timepicker) {
-            this.timepicker.timepicker('remove');
-        }
-    };
-    NKDatetime.prototype.ngOnChanges = function (changes) {
-        if (changes) {
-            if (changes['datepickerOptions'] && this.datepicker) {
-                this.datepicker.datepicker('destroy');
-                if (changes['datepickerOptions'].currentValue) {
-                    this.datepicker = null;
-                    this.init();
-                }
-                else if (changes['datepickerOptions'].currentValue === false) {
-                    this.datepicker.remove();
-                }
-            }
-            if (changes['timepickerOptions'] && this.timepicker) {
-                this.timepicker.timepicker('remove');
-                if (changes['timepickerOptions'].currentValue) {
-                    this.timepicker = null;
-                    this.init();
-                }
-                else if (changes['timepickerOptions'].currentValue === false) {
-                    this.timepicker.parent().remove();
-                }
-            }
         }
     };
     NKDatetime.prototype.writeValue = function (value) {
@@ -73,23 +45,6 @@ var NKDatetime = (function () {
     };
     NKDatetime.prototype.registerOnTouched = function (fn) {
         this.onTouched = fn;
-    };
-    NKDatetime.prototype.checkEmptyValue = function (e) {
-        var value = e.target.value;
-        if (value === '' && (this.timepickerOptions === false ||
-            this.datepickerOptions === false ||
-            (this.timeModel === '' && this.dateModel === ''))) {
-            this.dateChange.emit(null);
-        }
-    };
-    NKDatetime.prototype.onClearClick = function () {
-        this.dateChange.emit(null);
-        if (this.timepicker) {
-            this.timepicker.timepicker('setTime', null);
-        }
-        if (this.datepicker) {
-            this.datepicker.datepicker('update', null);
-        }
     };
     //////////////////////////////////
     NKDatetime.prototype.init = function () {
@@ -108,6 +63,7 @@ var NKDatetime = (function () {
                 }
                 _this.date = newDate;
                 _this.dateChange.emit(newDate);
+                _this.question.setValue(_this.date);
             });
         }
         else if (this.datepickerOptions === false) {
@@ -133,7 +89,7 @@ var NKDatetime = (function () {
                 if (!isDate(_this.date)) {
                     _this.date = new Date();
                     if (_this.datepicker !== undefined) {
-                        _this.datepicker.datepicker('update', _this.date);
+                        _this.datepicker.datepicker('update', _this.date.toLocaleDateString('en-US'));
                     }
                 }
                 _this.date.setHours(parseInt(hours));
@@ -146,11 +102,11 @@ var NKDatetime = (function () {
         }
     };
     NKDatetime.prototype.updateModel = function (date) {
-        // update datepicker
-        if (this.datepicker !== undefined) {
-            this.datepicker.datepicker('update', this.date);
-        }
-        // update timepicker
+        // update date
+        //        if (this.datepicker !== undefined) {
+        //            this.datepicker.datepicker('update', date.toLocaleDateString('en-US'));
+        //        }
+        // update time
         if (this.timepicker !== undefined) {
             var hours = this.date.getHours();
             if (this.timepickerOptions.showMeridian) {
@@ -158,9 +114,7 @@ var NKDatetime = (function () {
                 hours = (hours === 0 || hours === 12) ? 12 : hours % 12;
             }
             var meridian = this.date.getHours() >= 12 ? ' PM' : ' AM';
-            var time = this.pad(hours) + ':' + this.date.getMinutes() + meridian;
-            this.timepicker.timepicker('setTime', time);
-            this.timeModel = time; // fix initial empty timeModel bug
+            this.timepicker.timepicker('setTime', this.pad(hours) + ':' + this.date.getMinutes() + meridian);
         }
     };
     NKDatetime.prototype.pad = function (value) {
@@ -179,9 +133,17 @@ var NKDatetime = (function () {
         __metadata('design:type', Object)
     ], NKDatetime.prototype, "datepickerOptions", void 0);
     __decorate([
-        core_1.Input('hasClearButton'), 
+        core_1.Input('timePlaceholder'), 
+        __metadata('design:type', String)
+    ], NKDatetime.prototype, "timePlaceholderString", void 0);
+    __decorate([
+        core_1.Input('datePlaceholder'), 
+        __metadata('design:type', String)
+    ], NKDatetime.prototype, "datePlaceholderString", void 0);
+    __decorate([
+        core_1.Input(), 
         __metadata('design:type', Object)
-    ], NKDatetime.prototype, "hasClearButton", void 0);
+    ], NKDatetime.prototype, "question", void 0);
     __decorate([
         core_1.HostListener('dateChange', ['$event']), 
         __metadata('design:type', Object)
@@ -189,9 +151,10 @@ var NKDatetime = (function () {
     NKDatetime = __decorate([
         core_1.Component({
             selector: 'datetime',
-            template: "\n    <div class=\"form-inline\">\n        <div id=\"{{idDatePicker}}\" class=\"input-group date\">\n            <input type=\"text\" class=\"form-control\" \n                   [(ngModel)]=\"dateModel\"\n                   (keyup)=\"checkEmptyValue($event)\"/>\n            <div class=\"input-group-addon\">\n                <span [ngClass]=\"datepickerOptions.icon || 'glyphicon glyphicon-th'\"></span>\n            </div>\n        </div>\n        <div class=\"input-group bootstrap-timepicker timepicker\">\n            <input id=\"{{idTimePicker}}\" type=\"text\" class=\"form-control input-small\" \n                   [(ngModel)]=\"timeModel\"\n                   (keyup)=\"checkEmptyValue($event)\">\n            <span class=\"input-group-addon\"><i [ngClass]=\"timepickerOptions.icon || 'glyphicon glyphicon-time'\"></i></span>\n        </div>\n        <button *ngIf=\"hasClearButton\" type=\"button\" (click)=\"onClearClick()\">Clear</button>\n    </div>\n   "
+            //    directives: [MaskedInput],
+            template: "\n    <div class=\"form-inline\">\n        <div id=\"{{idDatePicker}}\" class=\"input-group date\">\n            <input [attr.id]=\"question.key\" [attr.aria-labelledby]=\"'label-' + question.key\" (keyup)=\"question.setValue($event)\" [placeholder]=\"datePlaceholderString\" type=\"text\" class=\"form-control\"/>\n            <div class=\"input-group-addon\">\n                <span [ngClass]=\"datepickerOptions.icon || 'glyphicon glyphicon-th'\"></span>\n            </div>\n        </div>\n        <div class=\"input-group bootstrap-timepicker timepicker\">\n            <input [attr.id]=\"question.key+'-time'\" [attr.aria-labelledby]=\"'label-' + question.key\" (keyup)=\"question.setValue($event)\" id=\"{{idTimePicker}}\" [placeholder]=\"timePlaceholderString\" type=\"text\" class=\"form-control input-small\">\n            <span class=\"input-group-addon\"><i [ngClass]=\"timepickerOptions.icon || 'glyphicon glyphicon-time'\"></i></span>\n        </div>\n    </div>\n   "
         }), 
-        __metadata('design:paramtypes', [forms_1.NgControl])
+        __metadata('design:paramtypes', [common_1.NgControl])
     ], NKDatetime);
     return NKDatetime;
 }());
